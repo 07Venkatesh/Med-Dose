@@ -1,0 +1,27 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Patch') {
+            steps {
+                echo "Checking out Med-Dose change: ${GERRIT_CHANGE_NUMBER}, patchset: ${GERRIT_PATCHSET_NUMBER}"
+                sh "git fetch origin ${GERRIT_REFSPEC} && git checkout FETCH_HEAD"
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                sh "./gradlew clean testDebugUnitTest assembleDebug"
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "Build failed. Gerrit will receive Verified-1."
+        }
+        success {
+            echo "Build passed. Gerrit will receive Verified+1."
+        }
+    }
+}
